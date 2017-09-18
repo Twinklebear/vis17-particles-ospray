@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 	const int nvals = std::atoi(argv[1]);
 	if (argc != nvals * 2 + 2) {
 		std::cout << "You must provide " << nvals
-			<< " values for each list to add together\n";
+			<< " values for each list to multiply together\n";
 		return 1;
 	}
 	std::vector<float> a(nvals, 0.f);

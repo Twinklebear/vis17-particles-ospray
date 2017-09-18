@@ -1,4 +1,4 @@
-adder.out: main.o sample_ispc.o
+multiplier.out: main.o sample_ispc.o
 	g++ $^ -o $@
 
 main.o: main.cpp sample_ispc.o
@@ -11,5 +11,5 @@ sample_ispc.o: sample.ispc
 
 .PHONY: clean
 clean:
-	rm -f adder.out *.o sample_ispc.h
+	rm -f multiplier.out *.o sample_ispc.h
 
