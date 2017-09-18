@@ -8,7 +8,7 @@ export void multiply(const uniform float *uniform a, const uniform float *unifor
 	// foreach. This construct maps the iterations of the for loop to
 	// the vector lanes of the CPU for parallelism.
 	foreach (i = 0 ... nvals) {
-	print("program indices: %\n", programIndex);
+		print("program indices: %\n", programIndex);
 		out[i] = a[i] * b[i];
 	}
 }
