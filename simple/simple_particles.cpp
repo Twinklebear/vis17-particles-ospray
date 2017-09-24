@@ -46,8 +46,10 @@ int main(int argc, const char **argv) {
 	// instead of taking a copy.
 	OSPData sphere_data = ospNewData(atoms.size() * sizeof(Atom), OSP_CHAR,
 			atoms.data(), OSP_DATA_SHARED_BUFFER);
+	ospCommit(sphere_data);
 	OSPData color_data = ospNewData(atom_colors.size(), OSP_FLOAT3,
 			atom_colors.data(), OSP_DATA_SHARED_BUFFER);
+	ospCommit(color_data);
 
 	// Create the sphere geometry that we'll use to represent our particles
 	OSPGeometry spheres = ospNewGeometry("spheres");
