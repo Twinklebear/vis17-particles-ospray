@@ -105,6 +105,7 @@ int main(int argc, const char **argv) {
 	ospCommit(lights);
 
 	// Setup the parameters for the renderer
+	ospSet1i(renderer, "shadowsEnabled", 1);
 	ospSet1i(renderer, "aoSamples", 8);
 	ospSet1f(renderer, "bgColor", 1.0);
 	ospSetObject(renderer, "model", model);
