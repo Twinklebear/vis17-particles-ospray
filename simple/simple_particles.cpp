@@ -1,4 +1,5 @@
 #include <vector>
+#include <random>
 #include <string>
 #include <array>
 #include <cstdio>
@@ -22,19 +23,18 @@ int main(int argc, const char **argv) {
 		return 1;
 	}
 
+	std::random_device rd;
+	std::mt19937 rng(rd());
+	std::uniform_real_distribution<float> pos(-3.0, 3.0);
+	std::uniform_int_distribution<int> type(0, 2);
+
 	// Setup our particle data as a sphere geometry.
 	// Each particle is an x,y,z center position + an atom type id, which
 	// we'll use to apply different colors for the different atom types.
-	std::vector<Atom> atoms = {
-		Atom(1.0, 0.0, 0.0, 0),
-		Atom(0.5, 0.5, 0.0, 1),
-		Atom(0.0, 1.0, 0.0, 0),
-		Atom(-0.5, 0.5, 0.0, 2),
-		Atom(-1.0, 0.0, 0.0, 1),
-		Atom(-0.5, -0.5, 0.0, 2),
-		Atom(0.0, -1.0, 0.0, 0),
-		Atom(0.5, -0.5, 0.0, 1)
-	};
+	std::vector<Atom> atoms;
+	for (size_t i = 0; i < 200; ++i) {
+		atoms.push_back(Atom(pos(rng), pos(rng), pos(rng), type(rng)));
+	}
 	std::vector<float> atom_colors = {
 		1.0, 0.0, 0.0,
 		0.0, 1.0, 0.0,
@@ -74,7 +74,7 @@ int main(int argc, const char **argv) {
 
 	// Setup the camera we'll render the scene from
 	const osp::vec2i img_size{1024, 1024};
-	const std::array<float, 3> cam_pos = {0.0, 0.0, 4.0};
+	const std::array<float, 3> cam_pos = {0.0, 0.0, 10.0};
 	const std::array<float, 3> cam_up = {0.0, 1.0, 0.0};
 	const std::array<float, 3> cam_dir = {0.0, 0.0, -1.0};
 	OSPCamera camera = ospNewCamera("perspective");
@@ -90,10 +90,18 @@ int main(int argc, const char **argv) {
 
 	// Create and setup an ambient light, this will also compute ambient
 	// occlusion.
-	OSPLight light = ospNewLight(renderer, "ambient");
-	ospCommit(light);
+	OSPLight ambient_light = ospNewLight(renderer, "ambient");
+	ospSet1f(ambient_light, "intensity", 0.1);
+	ospCommit(ambient_light);
+	OSPLight sun_light = ospNewLight(renderer, "distant");
+	ospSetVec3f(sun_light, "direction", osp::vec3f{-1.f, -1.f, -1.5f});
+	ospSetVec3f(sun_light, "color", osp::vec3f{1.f, 1.f, 0.8f});
+	ospSet1f(sun_light, "intensity", 1);
+	ospSet1f(sun_light, "angularDiameter", 0.5);
+	ospCommit(sun_light);
+	std::vector<OSPLight> lights_list = {ambient_light, sun_light};
 	// Setup a list of all the lights in the scene we're rendering
-	OSPData lights = ospNewData(1, OSP_LIGHT, &light, 0);
+	OSPData lights = ospNewData(lights_list.size(), OSP_LIGHT, lights_list.data(), 0);
 	ospCommit(lights);
 
 	// Setup the parameters for the renderer
@@ -119,7 +127,6 @@ int main(int argc, const char **argv) {
 	ospFreeFrameBuffer(framebuffer);
 	ospRelease(renderer);
 	ospRelease(lights);
-	ospRelease(renderer);
 	ospRelease(camera);
 	ospRelease(model);
 	ospRelease(spheres);
