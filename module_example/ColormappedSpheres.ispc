@@ -33,16 +33,18 @@ struct ColormappedSpheres {
 
   /*! data array that contains the sphere data.
       Offset and stride values point into here.  */
-  uint8     *data;
-  int32      stride;
-  int        offset_center;
-  int        offset_radius;
-  int        offset_attribute;
+  uint8 *data;
+  int32 stride;
+  int   offset_center;
+  int   offset_radius;
+  int   offset_attribute;
 
-  float      radius;
-  float      epsilon;
+  float radius;
+  float epsilon;
 
-  int        materialID;
+  int materialID;
+
+  TransferFunction *transferFunction;
 };
 
 static void ColormappedSpheres_postIntersect(uniform Geometry *uniform geometry,
@@ -52,6 +54,7 @@ static void ColormappedSpheres_postIntersect(uniform Geometry *uniform geometry,
                                              uniform int64 flags)
 {
   uniform ColormappedSpheres *uniform self = (uniform ColormappedSpheres *uniform)geometry;
+  uniform TransferFunction *uniform tfcn = self->transferFunction;
 
   dg.Ng = dg.Ns = ray.Ng;
 
@@ -59,7 +62,8 @@ static void ColormappedSpheres_postIntersect(uniform Geometry *uniform geometry,
     uint32 attributeAddr = self->offset_attribute + ray.primID * self->stride;
     float attrib = *((float*)(self->data + attributeAddr));
     // TODO: Read from the transfer function
-    dg.color = make_vec4f(attrib);
+    dg.color = make_vec4f(tfcn->getColorForValue(tfcn, attrib),
+                          tfcn->getOpacityForValue(tfcn, attrib));
   }
 
   if (flags & DG_MATERIALID) {
@@ -220,7 +224,8 @@ export void ColormappedSpheresGeometry_set(void *uniform _self,
                                            uniform int materialID,
                                            uniform int offset_center,
                                            uniform int offset_radius,
-                                           uniform int offset_attribute)
+                                           uniform int offset_attribute,
+                                           void *uniform _tfcn)
 {
   uniform ColormappedSpheres *uniform self = (uniform ColormappedSpheres *uniform)_self;
   uniform Model *uniform model = (uniform Model *uniform)_model;
@@ -240,6 +245,8 @@ export void ColormappedSpheresGeometry_set(void *uniform _self,
   self->offset_center     = offset_center;
   self->offset_radius     = offset_radius;
   self->offset_attribute  = offset_attribute;
+
+  self->transferFunction = (uniform TransferFunction *uniform)_tfcn;
 
   self->epsilon = log(self->radius);
   if (self->epsilon < 0.f)

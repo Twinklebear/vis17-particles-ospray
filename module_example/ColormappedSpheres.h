@@ -48,6 +48,7 @@ namespace vis17 {
     int64_t offset_attribute;
 
     ospray::Ref<ospray::Data> sphereData;
+    ospray::Ref<ospray::TransferFunction> transferFunction;
 
     float epsilon;  //epsilon for intersections
   };

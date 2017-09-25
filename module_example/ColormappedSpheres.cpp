@@ -44,10 +44,17 @@ namespace vis17 {
     offset_radius     = getParam1i("offset_radius", -1);
     offset_attribute  = getParam1i("offset_attribute", -1);
     sphereData        = getParamData("spheres");
+    transferFunction  = (TransferFunction*)getParamObject("transfer_function");
 
     if (sphereData.ptr == nullptr) {
       throw std::runtime_error("#vis17:ColormappedSpheres: no 'spheres' data "
                                "specified");
+    }
+    if (offset_attribute == -1) {
+      throw std::runtime_error("#vis17:ColormappedSpheres: no 'offset_attribute' set!");
+    }
+    if (!transferFunction) {
+      throw std::runtime_error("#vis17:ColormappedSpheres: no transfer function set!");
     }
 
     numSpheres = sphereData->numBytes / bytesPerSphere;
@@ -81,7 +88,8 @@ namespace vis17 {
                                          materialID,
                                          offset_center,
                                          offset_radius,
-                                         offset_attribute);
+                                         offset_attribute,
+                                         transferFunction->getIE());
   }
 
   OSP_REGISTER_GEOMETRY(ColormappedSpheres,colormapped_spheres);
