@@ -54,6 +54,10 @@ int main(int argc, const char **argv) {
 			atom_colors.data(), OSP_DATA_SHARED_BUFFER);
 	ospCommit(color_data);
 
+	// We'll use the scivis renderer, this renderer computes ambient occlusion
+	// and shadows for enhanced depth cues
+	OSPRenderer renderer = ospNewRenderer("scivis");
+
 	// Create the sphere geometry that we'll use to represent our particles
 	OSPGeometry spheres = ospNewGeometry("spheres");
 	ospSetData(spheres, "spheres", sphere_data);
@@ -64,6 +68,12 @@ int main(int argc, const char **argv) {
 	ospSet1i(spheres, "bytes_per_sphere", sizeof(Particle));
 	ospSet1i(spheres, "offset_radius", sizeof(osp::vec3f));
 	ospSet1i(spheres, "offset_colorID", sizeof(osp::vec3f) + sizeof(float));
+
+	OSPMaterial mat = ospNewMaterial(renderer, "OBJMaterial");
+	ospSetVec3f(mat, "Ks", osp::vec3f{0.5f, 0.5f, 0.5f});
+	ospSet1f(mat, "Ns", 5.f);
+	ospCommit(mat);
+	ospSetMaterial(spheres, mat);
 
 	// Our sphere data is now finished being setup, so we commit it to tell
 	// OSPRay all the object's parameters are updated.
@@ -87,10 +97,6 @@ int main(int argc, const char **argv) {
 	ospSet3fv(camera, "dir", cam_dir.data());
 	ospCommit(camera);
 
-	// We'll use the scivis renderer, this renderer computes ambient occlusion
-	// and shadows for enhanced depth cues
-	OSPRenderer renderer = ospNewRenderer("scivis");
-
 	// Create and setup an ambient light, this will also compute ambient
 	// occlusion.
 	OSPLight ambient_light = ospNewLight(renderer, "ambient");
@@ -108,6 +114,7 @@ int main(int argc, const char **argv) {
 	ospCommit(lights);
 
 	// Setup the parameters for the renderer
+	ospSet1i(renderer, "spp", 8);
 	ospSet1i(renderer, "shadowsEnabled", 1);
 	ospSet1i(renderer, "aoSamples", 8);
 	ospSet1f(renderer, "bgColor", 1.0);
