@@ -5,12 +5,13 @@
 #include <cstdio>
 #include <ospray/ospray.h>
 
-struct Atom {
-	float x, y, z;
+struct Particle {
+	osp::vec3f pos;
+	float radius;
 	int atom_type;
 
-	Atom(float x, float y, float z, int type)
-		: x(x), y(y), z(z), atom_type(type)
+	Particle(float x, float y, float z, float radius, int type)
+		: pos(osp::vec3f{x, y, z}), radius(radius), atom_type(type)
 	{}
 };
 
@@ -26,14 +27,16 @@ int main(int argc, const char **argv) {
 	std::random_device rd;
 	std::mt19937 rng(rd());
 	std::uniform_real_distribution<float> pos(-3.0, 3.0);
+	std::uniform_real_distribution<float> radius(0.15, 0.4);
 	std::uniform_int_distribution<int> type(0, 2);
 
 	// Setup our particle data as a sphere geometry.
 	// Each particle is an x,y,z center position + an atom type id, which
 	// we'll use to apply different colors for the different atom types.
-	std::vector<Atom> atoms;
+	std::vector<Particle> atoms;
 	for (size_t i = 0; i < 200; ++i) {
-		atoms.push_back(Atom(pos(rng), pos(rng), pos(rng), type(rng)));
+		atoms.push_back(Particle(pos(rng), pos(rng), pos(rng),
+					radius(rng), type(rng)));
 	}
 	std::vector<float> atom_colors = {
 		1.0, 0.0, 0.0,
@@ -44,7 +47,7 @@ int main(int argc, const char **argv) {
 	// Make the OSPData which will refer to our particle and color data.
 	// The OSP_DATA_SHARED_BUFFER flag tells OSPRay not to share our buffer,
 	// instead of taking a copy.
-	OSPData sphere_data = ospNewData(atoms.size() * sizeof(Atom), OSP_CHAR,
+	OSPData sphere_data = ospNewData(atoms.size() * sizeof(Particle), OSP_CHAR,
 			atoms.data(), OSP_DATA_SHARED_BUFFER);
 	ospCommit(sphere_data);
 	OSPData color_data = ospNewData(atom_colors.size(), OSP_FLOAT3,
@@ -55,12 +58,12 @@ int main(int argc, const char **argv) {
 	OSPGeometry spheres = ospNewGeometry("spheres");
 	ospSetData(spheres, "spheres", sphere_data);
 	ospSetData(spheres, "color", color_data);
-	ospSet1f(spheres, "radius", 0.35);
 	// Tell OSPRay how big each particle is in the atoms array, and where
 	// to find the color id. The offset to the center position of the sphere
 	// defaults to 0.
-	ospSet1f(spheres, "bytes_per_sphere", sizeof(Atom));
-	ospSet1i(spheres, "offset_colorID", 3 * sizeof(float));
+	ospSet1i(spheres, "bytes_per_sphere", sizeof(Particle));
+	ospSet1i(spheres, "offset_radius", sizeof(osp::vec3f));
+	ospSet1i(spheres, "offset_colorID", sizeof(osp::vec3f) + sizeof(float));
 
 	// Our sphere data is now finished being setup, so we commit it to tell
 	// OSPRay all the object's parameters are updated.
