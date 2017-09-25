@@ -21,6 +21,17 @@
 #include "common/Data.h"
 #include "transferFunction/TransferFunction.h"
 
+#if defined (_WIN32)
+  #if defined(ospray_module_colormapped_spheres_EXPORTS)
+    #define VIS17_COLORMAPPED_SPHERES_EXPORT __declspec(dllexport)
+  #else
+    #define VIS17_COLORMAPPED_SPHERES_EXPORT __declspec(dllimport)
+  #endif
+#else
+  #define VIS17_COLORMAPPED_SPHERES_EXPORT
+#endif
+
+
 namespace vis17 {
 
   /*! \brief A geometry for a set of colormapped spheres
@@ -28,7 +39,8 @@ namespace vis17 {
     Implements the \ref geometry_spheres geometry
 
   */
-  struct OSPRAY_SDK_INTERFACE ColormappedSpheres : public ospray::Geometry
+  struct VIS17_COLORMAPPED_SPHERES_EXPORT ColormappedSpheres
+    : public ospray::Geometry
   {
     ColormappedSpheres();
 
