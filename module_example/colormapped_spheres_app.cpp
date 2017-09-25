@@ -7,10 +7,10 @@
 
 struct Atom {
   float x, y, z;
-  int atom_type;
+  float temperature;
 
-  Atom(float x, float y, float z, int type)
-    : x(x), y(y), z(z), atom_type(type)
+  Atom(float x, float y, float z, float temperature)
+    : x(x), y(y), z(z), temperature(temperature)
   {}
 };
 
@@ -29,20 +29,15 @@ int main(int argc, const char **argv) {
   std::random_device rd;
   std::mt19937 rng(rd());
   std::uniform_real_distribution<float> pos(-3.0, 3.0);
-  std::uniform_int_distribution<int> type(0, 2);
+  std::uniform_real_distribution<float> temperature(25.0, 100.0);
 
   // Setup our particle data as a sphere geometry.
   // Each particle is an x,y,z center position + an atom type id, which
   // we'll use to apply different colors for the different atom types.
   std::vector<Atom> atoms;
   for (size_t i = 0; i < 200; ++i) {
-    atoms.push_back(Atom(pos(rng), pos(rng), pos(rng), type(rng)));
+    atoms.push_back(Atom(pos(rng), pos(rng), pos(rng), temperature(rng)));
   }
-  std::vector<float> atom_colors = {
-    1.0, 0.0, 0.0,
-    0.0, 1.0, 0.0,
-    0.0, 0.0, 1.0
-  };
 
   // Make the OSPData which will refer to our particle and color data.
   // The OSP_DATA_SHARED_BUFFER flag tells OSPRay not to share our buffer,
@@ -50,20 +45,38 @@ int main(int argc, const char **argv) {
   OSPData sphere_data = ospNewData(atoms.size() * sizeof(Atom), OSP_CHAR,
       atoms.data(), OSP_DATA_SHARED_BUFFER);
   ospCommit(sphere_data);
-  OSPData color_data = ospNewData(atom_colors.size(), OSP_FLOAT3,
-      atom_colors.data(), OSP_DATA_SHARED_BUFFER);
-  ospCommit(color_data);
+
+  OSPTransferFunction transfer_fcn = ospNewTransferFunction("piecewise_linear");
+  const std::vector<osp::vec3f> colors = {
+    osp::vec3f{0, 0, 0.563},
+    osp::vec3f{0, 0, 1},
+    osp::vec3f{0, 1, 1},
+    osp::vec3f{0.5, 1, 0.5},
+    osp::vec3f{1, 1, 0},
+    osp::vec3f{1, 0, 0},
+    osp::vec3f{0.5, 0, 0}
+  };
+  const std::vector<float> opacities = {0.8f, 1.f, 1.f};
+  OSPData colors_data = ospNewData(colors.size(), OSP_FLOAT3, colors.data());
+  ospCommit(colors_data);
+  OSPData opacity_data = ospNewData(opacities.size(), OSP_FLOAT, opacities.data());
+  ospCommit(opacity_data);
+
+  ospSetData(transfer_fcn, "colors", colors_data);
+  ospSetData(transfer_fcn, "opacities", opacity_data);
+  ospSetVec2f(transfer_fcn, "valueRange", osp::vec2f{temperature.min(), temperature.max()});
+  ospCommit(transfer_fcn);
 
   // Create the sphere geometry that we'll use to represent our particles
   OSPGeometry spheres = ospNewGeometry("colormapped_spheres");
   ospSetData(spheres, "spheres", sphere_data);
-  ospSetData(spheres, "color", color_data);
+  ospSetObject(spheres, "transfer_function", transfer_fcn);
   ospSet1f(spheres, "radius", 0.35);
   // Tell OSPRay how big each particle is in the atoms array, and where
   // to find the color id. The offset to the center position of the sphere
   // defaults to 0.
   ospSet1f(spheres, "bytes_per_sphere", sizeof(Atom));
-  ospSet1i(spheres, "offset_colorID", 3 * sizeof(float));
+  ospSet1i(spheres, "offset_attribute", 3 * sizeof(float));
 
   // Our sphere data is now finished being setup, so we commit it to tell
   // OSPRay all the object's parameters are updated.
