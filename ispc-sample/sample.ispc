@@ -1,3 +1,6 @@
+varying int mult(varying int a, varying int b) {
+	return a * b;
+}
 // C-callable functions are exported from ISPC with the export keyword.
 // These act as scalar-code entry points to the ISPC code.
 export void multiply(const uniform float *uniform a, const uniform float *uniform b,
@@ -9,7 +12,7 @@ export void multiply(const uniform float *uniform a, const uniform float *unifor
 	// the vector lanes of the CPU for parallelism.
 	foreach (i = 0 ... nvals) {
 		print("program indices: %\n", programIndex);
-		out[i] = a[i] * b[i];
+		out[i] = mult(a, b);
 	}
 }
 
