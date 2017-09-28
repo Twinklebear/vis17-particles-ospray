@@ -31,19 +31,17 @@ struct ColormappedSpheres {
   /*! inherit from "Geometry" class: */
   Geometry   super;
 
+  float radius;
+  int materialID;
+  int offset_center;
+  int offset_radius;
+  int offset_attribute;
+  float epsilon;
+
   /*! data array that contains the sphere data.
       Offset and stride values point into here.  */
   uint8 *data;
   int32 stride;
-  int   offset_center;
-  int   offset_radius;
-  int   offset_attribute;
-
-  float radius;
-  float epsilon;
-
-  int materialID;
-
   TransferFunction *transferFunction;
 };
 

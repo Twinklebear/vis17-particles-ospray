@@ -52,11 +52,10 @@ namespace vis17 {
     int64_t offset_center;
     int64_t offset_radius;
     int64_t offset_attribute;
+    float epsilon;
 
     ospray::Ref<ospray::Data> sphereData;
     ospray::Ref<ospray::TransferFunction> transferFunction;
-
-    float epsilon;
   };
 
 }
