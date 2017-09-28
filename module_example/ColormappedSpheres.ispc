@@ -61,7 +61,6 @@ static void ColormappedSpheres_postIntersect(uniform Geometry *uniform geometry,
   if (flags & DG_COLOR) {
     uint32 attributeAddr = self->offset_attribute + ray.primID * self->stride;
     float attrib = *((float*)(self->data + attributeAddr));
-    // TODO: Read from the transfer function
     dg.color = make_vec4f(tfcn->getColorForValue(tfcn, attrib),
                           tfcn->getOpacityForValue(tfcn, attrib));
   }
