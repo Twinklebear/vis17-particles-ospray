@@ -62,7 +62,7 @@ namespace vis17 {
                      << numSpheres;
 
     if (numSpheres >= (1ULL << 30)) {
-      throw std::runtime_error("#ospray::ColormappedSpheres: too many spheres in this "
+      throw std::runtime_error("#vis17::ColormappedSpheres: too many spheres in this "
                                "sphere geometry. Consider splitting this "
                                "geometry in multiple geometries with fewer "
                                "spheres (you can still put all those "
