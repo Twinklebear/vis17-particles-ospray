@@ -34,11 +34,7 @@
 
 namespace vis17 {
 
-  /*! \brief A geometry for a set of colormapped spheres
-
-    Implements the \ref geometry_spheres geometry
-
-  */
+  // A geometry for a set of colormapped spheres
   struct VIS17_COLORMAPPED_SPHERES_EXPORT ColormappedSpheres
     : public ospray::Geometry
   {
@@ -47,24 +43,20 @@ namespace vis17 {
     virtual std::string toString() const override;
     virtual void finalize(ospray::Model *model) override;
 
-    // Data members //
-
     /*! default radius, if no per-sphere radius was specified. */
     float radius;
     int32_t materialID;
 
     size_t numSpheres;
-    size_t bytesPerSphere; //!< num bytes per sphere
+    size_t bytesPerSphere;
     int64_t offset_center;
     int64_t offset_radius;
     int64_t offset_attribute;
+    float epsilon;
 
     ospray::Ref<ospray::Data> sphereData;
     ospray::Ref<ospray::TransferFunction> transferFunction;
-
-    float epsilon;  //epsilon for intersections
   };
-  /*! @} */
 
-} // ::ospray
+}
 
