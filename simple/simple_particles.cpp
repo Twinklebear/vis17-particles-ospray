@@ -1,4 +1,7 @@
 #include <vector>
+#include <iostream>
+#include <cstring>
+#include <fstream>
 #include <random>
 #include <string>
 #include <array>
@@ -15,6 +18,7 @@ struct Particle {
 	{}
 };
 
+void read_xyz(const std::string &file_name, std::vector<Particle> &particles, size_t &max_type);
 void write_ppm(const std::string &file_name, const int width, const int height,
 		const uint32_t *img);
 
@@ -24,25 +28,60 @@ int main(int argc, const char **argv) {
 		return 1;
 	}
 
+	std::string xyz_file;
+	std::array<float, 3> cam_pos = {0.0, 0.0, 9.0};
+	std::array<float, 3> cam_up = {0.0, 1.0, 0.0};
+	std::array<float, 3> cam_at = {0.0, 0.0, 0.0};
+	for (int i = 0; i < argc; ++i) {
+		if (std::strcmp(argv[i], "-xyz") == 0) {
+			xyz_file = argv[++i];
+		} else if (std::strcmp(argv[i], "-vp") == 0) {
+			for (size_t j = 0; j < 3; ++j) {
+				cam_pos[j] = std::atof(argv[++i]);
+			}
+		} else if (std::strcmp(argv[i], "-vu") == 0) {
+			for (size_t j = 0; j < 3; ++j) {
+				cam_up[j] = std::atof(argv[++i]);
+			}
+		} else if (std::strcmp(argv[i], "-vi") == 0) {
+			for (size_t j = 0; j < 3; ++j) {
+				cam_at[j] = std::atof(argv[++i]);
+			}
+		}
+	}
+	std::array<float, 3> cam_dir;
+	for (size_t i = 0; i < 3; ++i) {
+		cam_dir[i] = cam_at[i] - cam_pos[i];
+	}
+
 	std::random_device rd;
 	std::mt19937 rng(rd());
-	std::uniform_real_distribution<float> pos(-3.0, 3.0);
-	std::uniform_real_distribution<float> radius(0.15, 0.4);
-	std::uniform_int_distribution<int> type(0, 2);
-
-	// Setup our particle data as a sphere geometry.
-	// Each particle is an x,y,z center position + an atom type id, which
-	// we'll use to apply different colors for the different atom types.
+	size_t max_type;
 	std::vector<Particle> atoms;
-	for (size_t i = 0; i < 200; ++i) {
-		atoms.push_back(Particle(pos(rng), pos(rng), pos(rng),
-					radius(rng), type(rng)));
+	if (!xyz_file.empty()) {
+		read_xyz(xyz_file, atoms, max_type);
+	} else {
+		std::uniform_real_distribution<float> pos(-3.0, 3.0);
+		std::uniform_real_distribution<float> radius(0.15, 0.4);
+		std::uniform_int_distribution<int> type(0, 2);
+		max_type = type.max() + 1;
+
+		// Setup our particle data as a sphere geometry.
+		// Each particle is an x,y,z center position + an atom type id, which
+		// we'll use to apply different colors for the different atom types.
+		for (size_t i = 0; i < 200; ++i) {
+			atoms.push_back(Particle(pos(rng), pos(rng), pos(rng),
+						radius(rng), type(rng)));
+		}
 	}
-	std::vector<float> atom_colors = {
-		1.0, 0.0, 0.0,
-		0.0, 1.0, 0.0,
-		0.0, 0.0, 1.0
-	};
+
+	std::uniform_real_distribution<float> rand_color(0.0, 1.0);
+	std::vector<float> atom_colors;
+	for (size_t i = 0; i < max_type; ++i) {
+		for (size_t j = 0; j < 3; ++j) {
+			atom_colors.push_back(rand_color(rng));
+		}
+	}
 
 	// Make the OSPData which will refer to our particle and color data.
 	// The OSP_DATA_SHARED_BUFFER flag tells OSPRay not to share our buffer,
@@ -71,7 +110,7 @@ int main(int argc, const char **argv) {
 
 	OSPMaterial mat = ospNewMaterial(renderer, "OBJMaterial");
 	ospSetVec3f(mat, "Ks", osp::vec3f{0.5f, 0.5f, 0.5f});
-	ospSet1f(mat, "Ns", 5.f);
+	ospSet1f(mat, "Ns", 15.f);
 	ospCommit(mat);
 	ospSetMaterial(spheres, mat);
 
@@ -87,9 +126,6 @@ int main(int argc, const char **argv) {
 
 	// Setup the camera we'll render the scene from
 	const osp::vec2i img_size{1024, 1024};
-	const std::array<float, 3> cam_pos = {0.0, 0.0, 10.0};
-	const std::array<float, 3> cam_up = {0.0, 1.0, 0.0};
-	const std::array<float, 3> cam_dir = {0.0, 0.0, -1.0};
 	OSPCamera camera = ospNewCamera("perspective");
 	ospSet1f(camera, "aspect", 1.0);
 	ospSet3fv(camera, "pos", cam_pos.data());
@@ -144,7 +180,29 @@ int main(int argc, const char **argv) {
 
 	return 0;
 }
+void read_xyz(const std::string &file_name, std::vector<Particle> &particles, size_t &max_type) {
+	std::ifstream fin(file_name.c_str());
+	size_t n_particles = 0;
+	fin >> n_particles;
+	// Clear the Atoms. Timestep header (also clear the trailing newline from >>)
+	std::string line;
+	std::getline(fin, line);
+	std::getline(fin, line);
 
+	// Read all the atoms
+	size_t type;
+	max_type = 0;
+	float x, y, z;
+	while (fin >> type >> x >> y >> z) {
+		max_type = std::max(max_type, type);
+		particles.push_back(Particle(x, y, z, 1.0, type));
+	}
+	if (particles.size() != n_particles) {
+		throw std::runtime_error("Failed to read expected # of particles, got "
+				+ std::to_string(particles.size()) + ", expected "
+				+ std::to_string(n_particles));
+	}
+}
 void write_ppm(const std::string &file_name, const int width, const int height,
 		const uint32_t *img)
 {
