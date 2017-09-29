@@ -23,7 +23,8 @@ if (ospray_DIR)
   ospray_create_application(colormapped_spheres_app
     colormapped_spheres_app.cpp
     LINK
-    ${OSPRAY_LIBRARIES})
+    ${OSPRAY_LIBRARIES}
+    )
 
 else()
 
@@ -32,12 +33,13 @@ else()
     ColormappedSpheres.ispc
     moduleInit.cpp
     LINK
-    ${OSPRAY_LIBRARIES}
+    ospray
     )
 
   ospray_create_application(colormapped_spheres_app
     colormapped_spheres_app.cpp
     LINK
-    ${OSPRAY_LIBRARIES})
+    ospray
+    )
 endif()
 

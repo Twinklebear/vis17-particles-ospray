@@ -1,6 +1,6 @@
 # VIS17 Particle Rendering Tutorial OSPRay Samples
 
-Sample code covered in the CPU section of the IEEE VIS17 tutorial 
+Sample code covered in the CPU section of the IEEE VIS17 tutorial
 [Interactive Visualization of Large Dynamic Particle Data](http://ieeevis.org/year/2017/info/tutorials#Interactive_Particle_Vis).
 
 - [ispc-sample](ispc-sample/): Covers simple usage of [ISPC]()
