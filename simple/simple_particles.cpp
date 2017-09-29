@@ -168,6 +168,7 @@ int main(int argc, const char **argv) {
 
 	const uint32_t *img = static_cast<const uint32_t*>(ospMapFrameBuffer(framebuffer, OSP_FB_COLOR));
 	write_ppm("simple_particles.ppm", img_size.x, img_size.y, img);
+	std::cout << "Image saved to 'simple_particles.ppm'\n";
 	ospUnmapFrameBuffer(img, framebuffer);
 
 	// Clean up all our objects
