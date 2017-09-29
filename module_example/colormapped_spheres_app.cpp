@@ -25,7 +25,15 @@ void write_ppm(const std::string &file_name, const int width, const int height,
 int main(int argc, const char **argv) {
   OSPError err = ospInit(&argc, argv);
   if (err != OSP_NO_ERROR) {
-    return 1;
+    throw std::runtime_error("ospInit failed!");
+  }
+
+  // Load our module with the colormapped_spheres geometry
+  err = ospLoadModule("colormapped_spheres");
+  if (err != OSP_NO_ERROR) {
+    std::cerr << "Failed to load colormapped spheres module!"
+      << " Is your LD_LIBRARY_PATH set properly?\n";
+    throw std::runtime_error("ospLoadModule failed!");
   }
 
   std::string xyz_file;
@@ -53,9 +61,6 @@ int main(int argc, const char **argv) {
   for (size_t i = 0; i < 3; ++i) {
     cam_dir[i] = cam_at[i] - cam_pos[i];
   }
-
-  // Load our module with the colormapped_spheres geometry
-  ospLoadModule("colormapped_spheres");
 
   float radius = 1.0;
   std::array<float, 2> attrib_range;
@@ -88,13 +93,9 @@ int main(int argc, const char **argv) {
 
   OSPTransferFunction transfer_fcn = ospNewTransferFunction("piecewise_linear");
   const std::vector<osp::vec3f> colors = {
-    osp::vec3f{0, 0, 0.5},
-    osp::vec3f{0, 0, 1},
-    osp::vec3f{0, 1, 1},
-    osp::vec3f{0.5, 1, 0.5},
-    osp::vec3f{1, 1, 0},
-    osp::vec3f{1, 0, 0},
-    osp::vec3f{0.5, 0, 0}
+    osp::vec3f{0.231373, 0.298039, 0.75294},
+    osp::vec3f{0.865003, 0.865003, 0.86500},
+    osp::vec3f{0.705882, 0.0156863, 0.14902},
   };
   const std::vector<float> opacities = {1.f, 1.f};
   OSPData colors_data = ospNewData(colors.size(), OSP_FLOAT3, colors.data());
@@ -122,11 +123,12 @@ int main(int argc, const char **argv) {
   // and shadows for enhanced depth cues
   OSPRenderer renderer = ospNewRenderer("scivis");
 
-	OSPMaterial mat = ospNewMaterial(renderer, "OBJMaterial");
-	ospSetVec3f(mat, "Ks", osp::vec3f{0.25f, 0.25f, 0.25f});
-	ospSet1f(mat, "Ns", 4.f);
-	ospCommit(mat);
-	ospSetMaterial(spheres, mat);
+  OSPMaterial mat = ospNewMaterial(renderer, "OBJMaterial");
+  ospSetVec3f(mat, "Kd", osp::vec3f{1.0f, 1.0f, 1.0f});
+  ospSetVec3f(mat, "Ks", osp::vec3f{0.5f, 0.5f, 0.5f});
+  ospSet1f(mat, "Ns", 15.f);
+  ospCommit(mat);
+  ospSetMaterial(spheres, mat);
   // Our sphere data is now finished being setup, so we commit it to tell
   // OSPRay all the object's parameters are updated.
   ospCommit(spheres);
@@ -181,6 +183,7 @@ int main(int argc, const char **argv) {
 
   const uint32_t *img = static_cast<const uint32_t*>(ospMapFrameBuffer(framebuffer, OSP_FB_COLOR));
   write_ppm("colormapped_spheres_render.ppm", img_size.x, img_size.y, img);
+  std::cout << "Image saved to 'colormapped_spheres_render.ppm'\n";
   ospUnmapFrameBuffer(img, framebuffer);
 
   // Clean up all our objects
