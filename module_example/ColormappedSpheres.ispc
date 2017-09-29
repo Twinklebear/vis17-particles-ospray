@@ -63,6 +63,10 @@ static void ColormappedSpheres_postIntersect(uniform Geometry *uniform geometry,
                           tfcn->getOpacityForValue(tfcn, attrib));
   }
 
+  if (flags & DG_TEXCOORD) {
+    dg.st = make_vec2f(0.0f);
+  }
+
   if (flags & DG_MATERIALID) {
     dg.materialID = self->materialID;
   }
@@ -156,6 +160,8 @@ export void ColormappedSpheresGeometry_set(void *uniform _self,
   self->super.model = model;
   self->super.geomID = geomID;
   self->super.primitives = numSpheres;
+  self->super.getAreas = NULL;
+  self->super.sampleArea = NULL;
   self->radius = radius;
   self->data = (uint8 *uniform)data;
   self->materialID = materialID;
@@ -167,7 +173,7 @@ export void ColormappedSpheresGeometry_set(void *uniform _self,
 
   self->transferFunction = (uniform TransferFunction *uniform)_tfcn;
 
-  self->epsilon = log(self->radius);
+  self->epsilon = max(log(self->radius), 0.001);
   if (self->epsilon < 0.f)
     self->epsilon = -1.f/self->epsilon;
 
