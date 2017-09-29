@@ -3,6 +3,10 @@ set(CMAKE_CXX_STANDARD 11)
 
 # Also see the pluggableGeometryExample which is included with OSPRay
 
+if (WIN32)
+  add_definitions(-DNOMINMAX)
+endif()
+
 # If we were passed -Dospray_DIR this module is being built outside
 # of the OSPRay source. Otherwise we assume we're being built in the OSPRay
 # build tree as a module under ospray/modules/

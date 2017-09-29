@@ -93,9 +93,9 @@ int main(int argc, const char **argv) {
 
   OSPTransferFunction transfer_fcn = ospNewTransferFunction("piecewise_linear");
   const std::vector<osp::vec3f> colors = {
-    osp::vec3f{0.231373, 0.298039, 0.75294},
-    osp::vec3f{0.865003, 0.865003, 0.86500},
-    osp::vec3f{0.705882, 0.0156863, 0.14902},
+    osp::vec3f{0.231373f, 0.298039f, 0.75294f},
+    osp::vec3f{0.865003f, 0.865003f, 0.86500f},
+    osp::vec3f{0.705882f, 0.0156863f, 0.14902f},
   };
   const std::vector<float> opacities = {1.f, 1.f};
   OSPData colors_data = ospNewData(colors.size(), OSP_FLOAT3, colors.data());
