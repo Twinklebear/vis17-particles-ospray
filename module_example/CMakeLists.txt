@@ -18,8 +18,8 @@ if (ospray_DIR)
 
   ospray_create_library(ospray_module_colormapped_spheres
     ColormappedSpheres.cpp
-    ColormappedSpheres.ispc
     moduleInit.cpp
+    ColormappedSpheres.ispc
     LINK
     ${OSPRAY_LIBRARIES}
     )
@@ -34,8 +34,8 @@ else()
 
   ospray_create_library(ospray_module_colormapped_spheres
     ColormappedSpheres.cpp
-    ColormappedSpheres.ispc
     moduleInit.cpp
+    ColormappedSpheres.ispc
     LINK
     ospray
     )
