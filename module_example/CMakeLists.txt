@@ -3,6 +3,10 @@ set(CMAKE_CXX_STANDARD 11)
 
 # Also see the pluggableGeometryExample which is included with OSPRay
 
+if (WIN32)
+  add_definitions(-DNOMINMAX)
+endif()
+
 # If we were passed -Dospray_DIR this module is being built outside
 # of the OSPRay source. Otherwise we assume we're being built in the OSPRay
 # build tree as a module under ospray/modules/
@@ -14,8 +18,8 @@ if (ospray_DIR)
 
   ospray_create_library(ospray_module_colormapped_spheres
     ColormappedSpheres.cpp
-    ColormappedSpheres.ispc
     moduleInit.cpp
+    ColormappedSpheres.ispc
     LINK
     ${OSPRAY_LIBRARIES}
     )
@@ -30,8 +34,8 @@ else()
 
   ospray_create_library(ospray_module_colormapped_spheres
     ColormappedSpheres.cpp
-    ColormappedSpheres.ispc
     moduleInit.cpp
+    ColormappedSpheres.ispc
     LINK
     ospray
     )
