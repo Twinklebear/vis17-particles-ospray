@@ -159,7 +159,7 @@ export void ColormappedSpheresGeometry_set(void *uniform _self,
 
   self->super.model = model;
   self->super.geomID = geomID;
-  self->super.primitives = numSpheres;
+  self->super.numPrimitives = numSpheres;
   self->super.getAreas = NULL;
   self->super.sampleArea = NULL;
   self->radius = radius;
